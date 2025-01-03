@@ -26,7 +26,7 @@ color1 <- "#782391"
 color2 <- "#f2a23f"
 
 thermal_indicies %>% 
-  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmean_mean) ) %>% 
+  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmean_mean) ) %>% # BO21... doesn't exist in thermal_indicies 
   
   ggplot(aes(x=gen_spp)) +
   
