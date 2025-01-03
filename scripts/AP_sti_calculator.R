@@ -1,16 +1,28 @@
 ## Species Thermal Indices (courtesy of Dr. Tom Webb)##
 #ON SEPT 16TH 2022 I changed the temp metric from mean at mean depth to max at mean depth at line 37+
-library(tidyverse) # v1.2.1
-library(lubridate) # v1.7.4
-library(worrms) # v0.2.8
-library(robis) # v1.0.1
-library(raster) # v2.6-7
-library(sdmpredictors) # v0.2.8
-library(naniar) # v0.3.1
-library(taxize)
+# library(tidyverse) # v1.2.1
+# library(lubridate) # v1.7.4
+# library(worrms) # v0.2.8
+# library(robis) # v1.0.1
+# library(raster) # v2.6-7
+# library(sdmpredictors) # v0.2.8
+# library(naniar) # v0.3.1
+# library(taxize)
+#remotes::install_github("ropensci/bold")
+
+# using pacman to make sure things are loading right
+pacman::p_load(tidyverse, lubridate, 
+               worrms, robis, raster, 
+               sdmpredictors, naniar)
+
+# some packages are now deprecated - loading to make
+# script work
+pacman::p_load_gh("ropensci/bold", 
+                  "ropensci/taxize")
 
 setwd(here::here())
-#setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/sp_thermal_limits")
+
+source("scripts/sdmpredictors_fixed.R") #
 
 # JL notes: -------------------------------------------------------
 # we should think more about which layers we are using, because there are loads
@@ -29,12 +41,21 @@ use_defaults <- TRUE
 
 ## --------------------------------------------------------------------------------------------------------------------
 #Modiolus modiolus, Metridium senile, Anurida maritima, Fucus distichus, Mastocarpus stellatus, Ceramium virgatum, Hildenbrandia rubra, Strongylocentrotus droebachiensis, Prasiola stipitata, Hiatella arctica, Cryptosula pallasiana, Rhizoclonium tortuosum, Leathesia marina, Phymatolithon lenormandii, Asterias rubens, Elachista fucicola, Lacuna vincta, Anomia simplex, Clathromorphum circumscriptum, Saccharina latissima, Crepidula fornicata, Asterias forbesi, Cancer borealis, Diadumene lineata, Pagurus acadianus, Semibalanus balanoides, Mytilus edulis, Nucella lapillus, Littorina obtusata, Littorina saxatilis, Ascophyllum nodosum, Chondrus crispus, Littorina littorea, Corallina officinalis, Fucus spiralis, Fucus vesiculosus, Tectura testudinalis, Alaria esculenta, Ulva lactuca, Codium fragile, Ulva intestinalis, Chordaria flagelliformis, Ahnfeltia plicata, Plumaria plumosa
-my_sp <- wm_name2id()
+qw <- function(string, sep = "\\s+") {
+
+  strsplit(string, split = sep)[[1]]
+
+}
+
+my_sp_string <- qw("Modiolus modiolus, Metridium senile, Anurida maritima, Fucus distichus, Mastocarpus stellatus, Ceramium virgatum, Hildenbrandia rubra, Strongylocentrotus droebachiensis, Prasiola stipitata, Hiatella arctica, Cryptosula pallasiana, Rhizoclonium tortuosum, Leathesia marina, Phymatolithon lenormandii, Asterias rubens, Elachista fucicola, Lacuna vincta, Anomia simplex, Clathromorphum circumscriptum, Saccharina latissima, Crepidula fornicata, Asterias forbesi, Cancer borealis, Diadumene lineata, Pagurus acadianus, Semibalanus balanoides, Mytilus edulis, Nucella lapillus, Littorina obtusata, Littorina saxatilis, Ascophyllum nodosum, Chondrus crispus, Littorina littorea, Corallina officinalis, Fucus spiralis, Fucus vesiculosus, Tectura testudinalis, Alaria esculenta, Ulva lactuca, Codium fragile, Ulva intestinalis, Chordaria flagelliformis, Ahnfeltia plicata, Plumaria plumosa",
+                   sep = ", ")
+
+my_sp <- wm_name2id("Modiolus modiolus")
 my_sp
 
 
 ## --------------------------------------------------------------------------------------------------------------------
-get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdmean", ""),
+get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdmean"),
                                 save_all_recs = TRUE, use_defaults = use_defaults){
   
   # function to get OBIS records for a given species and match to Bio-Oracle data
@@ -61,7 +82,7 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
 
 ## --------------------------------------------------------------------------------------------------------------------
 get_obis_recs <- function(species_id, missing_check = FALSE,
-                          fields = c("decimalLongitude", "decimalLatitude", "depth", "year", "month",
+                          fields = c("decimalLongitude", "decimalLatitude", "depth", "date_year", #"month",
                                      "scientificName", "aphiaID")
 ){
   # Fuction to get OBIS records for a given species_id, which must be a recognised WoRMS Aphia ID
@@ -74,10 +95,10 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
       # get OBIS records for a given species ID, add year and month, set negative and missing depth to 0
       obis_recs <- occurrence(taxonid = species_id) %>% 
         as_tibble() %>% 
-        dplyr::select(fields) %>% 
+        dplyr::select(all_of(fields)) %>% 
         mutate(depth = as.numeric(depth),
-               year = formatC(year),
-               month = formatC(month, width = 2, flag = "0"),
+               year = formatC(date_year),
+              # month = formatC(month, width = 2, flag = "0"),
                depth0 = case_when(
                  is.na(depth) ~ 0,
                  depth < 0 ~ 0,
@@ -90,10 +111,10 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
   } else {
     obis_recs <- occurrence(taxonid = species_id) %>% 
       as_tibble() %>% 
-      dplyr::select(fields) %>% 
+      dplyr::select(all_of(fields)) %>% 
       mutate(depth = as.numeric(depth),
-             year = formatC(year),
-             month = formatC(month, width = 2, flag = "0"),
+             year = formatC(date_year),
+            # month = formatC(month, width = 2, flag = "0"),
              depth0 = case_when(
                is.na(depth) ~ 0,
                depth < 0 ~ 0,
@@ -118,7 +139,8 @@ get_bio_oracle_t <- function(obis_recs, layercodes, use_defaults = TRUE){
                recursive = FALSE, showWarnings = FALSE)}
   # load the layers
   bo_t_dat <- load_layers(layercodes,
-                          equalarea = TRUE, datadir = "biooracle")
+                          equalarea =TRUE,
+                          datadir = "biooracle")
   # Turn the OBIS occurrence locations into spatial points
   points <- SpatialPoints(
     obis_recs[,c("decimalLongitude", "decimalLatitude")],
@@ -198,15 +220,15 @@ t_summary <- function(t_matched_dat, layercodes){
 #data <- read.csv("./McCollum_Sebens_sp_list.csv")
 View(data)
 
-data <- read.csv("./Sebens_found_sp_list.csv")
+data <- read.csv("data/Sebens_found_sp_list.csv")
 
 # pull only entries with spaces to ensure Genus species
 data <- data %>%
-  arrange(name) %>%
-  filter(str_detect(name, " "))
+  arrange(Accepted.Name) %>%
+  filter(str_detect(Accepted.Name, " "))
 
 # isolate names variable
-names <- data %>% pull(name)
+names <- data %>% pull(Accepted.Name)
 
 # use taxize package
 names_clean <- taxize::gnr_resolve(names) %>% 
@@ -219,33 +241,33 @@ names[!names %in% names_clean]
 # make some manual changes bc these names don't work as is
 # (usually it's because the name is not accepted anymore in worms)
 #names_clean <- recode(names_clean, 
-       "Carcinus maenus" =  "Carcinus maenas",
-       "Giffordia granulosa" = "Hincksia granulosa",
-       "Hippothoa hyalina" = "Celleporella hyalina",
-       "Idotea baltica" = "Idotea balthica",
-       "Nemalion helminthoides" = "Nemalion elminthoides",
-       "Tectura testudinalis" = "Testudinalia testudinalis",
-       "Tonicella rubra" = "Boreochiton ruber",
-       "Botryllus schlosseri" = "Botryllus schlosseri",
-       "Bugula turrita" = "Crisularia turrita",
-       "Cuthona gymnota" = "Catriona gymnota",
-       "Gellius arcoferus" = "Hemigellius arcofer",
-       "Halichondria panicea" = "Halichondria (Halichondria) panicea",
-       "Haliclona oculata" = "Haliclona (Haliclona) oculata",
-       "Microciona prolifera" = "Clathria (Clathria) prolifera",
-       "Myxilla fimbriata" = "Myxilla (Myxilla) fimbriata",
-       "Notoacmea testudinalis" = "Testudinalia testudinalis",
-       "Pholis gunnelus" = "Pholis gunnellus",
-       "Porania pulvillus" = "Porania (Porania) pulvillus",
-       "Sagartia elegans" = "Cylista elegans",
-       "Scrupocellaria scabra" = "Aquiloniella scabra",
-       "Tritonia plebeia" = "Duvaucelia plebeia",
-        "Halisarca nahtantensis" = "Halisarca nahantensis",
-       "Bugula turrita" = "Crisularia turrita",
-       "Clathria prolifera" = "Clathria (Clathria) prolifera",
-       "Flabellina verrucosa" = "Coryphella verrucosa",
-       "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
-       "Leptasterias polaris" = "Leptasterias (Hexasterias) polaris") %>% unique()
+       # "Carcinus maenus" =  "Carcinus maenas",
+       # "Giffordia granulosa" = "Hincksia granulosa",
+       # "Hippothoa hyalina" = "Celleporella hyalina",
+       # "Idotea baltica" = "Idotea balthica",
+       # "Nemalion helminthoides" = "Nemalion elminthoides",
+       # "Tectura testudinalis" = "Testudinalia testudinalis",
+       # "Tonicella rubra" = "Boreochiton ruber",
+       # "Botryllus schlosseri" = "Botryllus schlosseri",
+       # "Bugula turrita" = "Crisularia turrita",
+       # "Cuthona gymnota" = "Catriona gymnota",
+       # "Gellius arcoferus" = "Hemigellius arcofer",
+       # "Halichondria panicea" = "Halichondria (Halichondria) panicea",
+       # "Haliclona oculata" = "Haliclona (Haliclona) oculata",
+       # "Microciona prolifera" = "Clathria (Clathria) prolifera",
+       # "Myxilla fimbriata" = "Myxilla (Myxilla) fimbriata",
+       # "Notoacmea testudinalis" = "Testudinalia testudinalis",
+       # "Pholis gunnelus" = "Pholis gunnellus",
+       # "Porania pulvillus" = "Porania (Porania) pulvillus",
+       # "Sagartia elegans" = "Cylista elegans",
+       # "Scrupocellaria scabra" = "Aquiloniella scabra",
+       # "Tritonia plebeia" = "Duvaucelia plebeia",
+       #  "Halisarca nahtantensis" = "Halisarca nahantensis",
+       # "Bugula turrita" = "Crisularia turrita",
+       # "Clathria prolifera" = "Clathria (Clathria) prolifera",
+       # "Flabellina verrucosa" = "Coryphella verrucosa",
+       # "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
+       # "Leptasterias polaris" = "Leptasterias (Hexasterias) polaris") %>% unique()
 
 names_clean <- recode(names_clean,
                       "Tubularia crocea" = "Ectopleura crocea",
@@ -257,8 +279,8 @@ names_clean <- recode(names_clean,
 
 # manually remove some that didn't work - not sure why,
 # errors said these entries didn't have depth values
-names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
-names_clean <- names_clean[!names_clean == "Phymatolithon rugulosum"]
+# maybe need this # names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
+# maybe need this # names_clean <- names_clean[!names_clean == "Phymatolithon rugulosum"]
 
 #names_clean <- names_clean[!names_clean =="Micrura affinis"]
 #names_clean <- names_clean[!names_clean == "Protectocarpus speciosus"]
@@ -317,12 +339,14 @@ coefout <- coefout %>% relocate(gen_spp)
 write.csv(coefout, 
           file = here::here(#"outputs","datasets",
                       "data",
-                      "Occurrence_based_species_thermal_indicies_Photos.csv"),
+                      "Occurrence_based_species_thermal_indicies_Photos_20250103.csv"),
           row.names = F)
+
+# read in and go from here
 read.csv(coefout, 
          file = here::here(#"outputs","datasets",
            "data",
-           "Occurrence_based_species_thermal_indicies_Photos.csv"),
+           "Occurrence_based_species_thermal_indicies_Photos_20250103.csv"),
          row.names = F)
 View(coefout)
 
