@@ -12,7 +12,7 @@ library(taxize)
 setwd(here::here())
 #setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/sp_thermal_limits")
 
-# JL notes: -------------------------------------------------------------
+# JL notes: -----------------------------------------------------------
 # we should think more about which layers we are using, because there are loads
 # of options. read about them here:
 list_layers() %>% filter(str_detect(name, "Sea surface|Sea water temperature|Sea bottom")) %>%
