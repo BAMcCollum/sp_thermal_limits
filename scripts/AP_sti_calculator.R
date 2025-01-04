@@ -62,7 +62,7 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
   # if save_all_recs == TRUE, this full matched dataset will be saved before summarising
   # function returns a summary of temperature affinity of the species
   
-  # run the full set of functions
+  # run the full set of functions #109620
   sp_temp <- get_obis_recs(species_id = sp_id) %>%
     get_bio_oracle_t(layercodes = bo_lc) %>%
     save_full_recs(save_recs = save_all_recs) %>%
@@ -176,7 +176,7 @@ save_full_recs <- function(rec_df, save_recs = TRUE, use_defaults = TRUE, bespok
                           "_obis_iap_bo_", Sys.Date(), ".csv")
     
     # write the file
-    write_csv(x = rec_df, path = file.path(paste(out_path, sp_filename, sep = "/")))
+    write_csv(x = rec_df, file = file.path(paste(out_path, sp_filename, sep = "/")))
   }
   
   # Return the (unchanged) data to pass to next function
@@ -279,8 +279,10 @@ names_clean <- recode(names_clean,
 
 # manually remove some that didn't work - not sure why,
 # errors said these entries didn't have depth values
-# maybe need this # names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
-# maybe need this # names_clean <- names_clean[!names_clean == "Phymatolithon rugulosum"]
+# maybe need this # 
+names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
+# maybe need this # 
+names_clean <- names_clean[!names_clean == "Phymatolithon rugulosum"]
 
 #names_clean <- names_clean[!names_clean =="Micrura affinis"]
 #names_clean <- names_clean[!names_clean == "Protectocarpus speciosus"]
