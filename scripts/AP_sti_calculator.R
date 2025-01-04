@@ -396,7 +396,9 @@ color2 <- "#f2a23f"
   
   
   labs(x=NULL, y= "Water Temperature in C")+
+   theme_bw() +
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
         axis.text.x = element_text(angle = -90, hjust = 0))
-r
+
+ ggsave("figures/thermal_tolerance_ranges.jpg")
 
