@@ -27,8 +27,10 @@ source("scripts/sdmpredictors_fixed.R") #
 # JL notes: -------------------------------------------------------
 # we should think more about which layers we are using, because there are loads
 # of options. read about them here:
+
 list_layers() %>% filter(str_detect(name, "Sea surface|Sea water temperature|Sea bottom")) %>%
  dplyr::select(layer_code,name) %>% arrange(layer_code)
+
 list_layers() %>% filter(str_detect(layer_code,"BO2_tempmean_bdmean")) %>% dplyr::select(name)
 
 ## ---- eval = FALSE---------------------------------------------------------------------------------------------------
@@ -55,7 +57,10 @@ my_sp
 
 
 ## --------------------------------------------------------------------------------------------------------------------
-get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdmean"),
+get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdmean", 
+                                                 "BO21_tempmax_ss", "BO21_tempmean_bdmean",
+                                                 "BO21_tempmean_bdmin",
+                                                 "BO21_tempmax_bdmin", "BO21_templtmax_bdmin"),
                                 save_all_recs = TRUE, use_defaults = use_defaults){
   
   # function to get OBIS records for a given species and match to Bio-Oracle data
