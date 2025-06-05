@@ -236,9 +236,15 @@ data <- data %>%
 names <- data %>% pull(Accepted.Name)
 
 # use taxize package
-names_clean <- taxize::gnr_resolve(names) %>% 
-  filter(user_supplied_name == matched_name) %>%
-  distinct(matched_name) %>% pull(matched_name)
+# gna_verifier
+names_clean <- taxize::gna_verifier(names)%>% 
+  filter(submittedName == matchedCanonicalSimple) %>%
+  distinct(matchedCanonicalSimple) %>% pull(matchedCanonicalSimple)
+ 
+# old code using gnr_resolve which is now deprecated
+# names_clean <- taxize::gnr_resolve(names) %>% 
+#   filter(user_supplied_name == matched_name) %>%
+#   distinct(matched_name) %>% pull(matched_name)
 
 # view the entries we cut
 names[!names %in% names_clean]
@@ -346,18 +352,12 @@ coefout <- coefout %>% relocate(gen_spp)
 write.csv(coefout, 
           file = here::here(#"outputs","datasets",
                       "data",
-                      "Occurrence_based_species_thermal_indicies_Photos_20250103.csv"),
+                      "Occurrence_based_species_thermal_indicies_Photos_20250605.csv"),
           row.names = F)
 
 # read in and go from here
-read.csv(coefout, 
-         file = here::here(#"outputs","datasets",
-           "data",
-           "Occurrence_based_species_thermal_indicies_Photos_20250103.csv"),
-         row.names = F)
-View(coefout)
 
-coefout <- read.csv("data/Occurrence_based_species_thermal_indicies_Photos_20250103.csv")
+coefout <- read.csv("data/Occurrence_based_species_thermal_indicies_Photos_20250605.csv")
 
 # plot data ---------------------------------------------------------------
 
