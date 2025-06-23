@@ -6,6 +6,8 @@ library(raster) # v2.6-7
 library(sdmpredictors) # v0.2.8
 library(naniar) # v0.3.1
 library(taxize)
+library(flextable) 
+
 
 setwd(here::here())
 #setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/sp_thermal_limits")
@@ -15,10 +17,13 @@ View(thermal_indicies)
 
 # we should think more about which layers we are using, because there are loads
 # of options. read about them here:
-list_layers() %>% filter(str_detect(name, "Sea surface|Sea water temperature|Sea bottom")) %>%
-  dplyr::select(layer_code,name) %>% arrange(layer_code)
-list_layers() %>% filter(str_detect(layer_code,"BO2_tempmean_bdmean")) %>% dplyr::select(name)
+layers <- tibble(list_layers(simplify = FALSE) %>% filter(str_detect(name, "Sea water temperature")) %>%
+  dplyr::select(layer_code,name) %>% arrange(layer_code))
 
+View(layers)
+
+layers_table <- flextable(layers)
+autofit(layers_table)
 
 # plot data ---------------------------------------------------------------
 
@@ -141,17 +146,18 @@ maxtemp_mindepth_Pershing_plotq <- thermal_indicies %>%
 color1 <- "#782391"
 color2 <- "#f2a23f"
 
-maxtemp_mindepth_Pershing_plotminmax <- thermal_indicies %>% 
+maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies %>% 
   mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmin_mean) ) %>% # BO21... doesn't exist in thermal_indicies 
   
   ggplot(aes(x=gen_spp)) +
   
-  geom_point(aes(y=BO21_tempmax_bdmin_min),  color = color2, alpha=.5)+
-  geom_point(aes(y=BO21_tempmax_bdmin_max), color = color2, alpha=.5) +
-  geom_point(aes(y=BO21_tempmax_bdmin_mean), color = color1, alpha=1, size=1.5) +
+  geom_point(aes(y=BO21_tempmax_bdmin_min),  color = color2, alpha = 1)+
+  geom_point(aes(y=BO21_tempmax_bdmin_max), color = color2, alpha = 1) +
   geom_segment(aes(xend=gen_spp,
                    y=BO21_tempmax_bdmin_min,
-                   yend=BO21_tempmax_bdmin_max), color = color2, alpha=.5) +
+                   yend=BO21_tempmax_bdmin_max), color = color2, alpha=1) +
+  geom_point(aes(y=BO21_tempmax_bdmin_mean), color = color1, alpha=1, size=3) +
+  
   annotate(geom="text",
            x=2, y=32, 
            hjust=0, vjust=0.2,
@@ -161,12 +167,12 @@ maxtemp_mindepth_Pershing_plotminmax <- thermal_indicies %>%
            fontface="bold",
            size=5) +
   
-  geom_hline(yintercept = 13.21, col = "turquoise")+
+  geom_hline(yintercept = 14.07, col = "turquoise")+
   
   labs(x=NULL, y= "Water Temperature in C")+
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
     axis.text.x = element_text(angle = -90, hjust = 0))
 
-ggsave("figures/maxtemp_mindepth_Pershing_plotminmax.jpg")
+ggsave("figures/maxtemp_mindepth_tipping_point_plotminmax.jpg")
 
 
