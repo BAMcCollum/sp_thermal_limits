@@ -157,6 +157,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies %>%
                    y=BO21_tempmax_bdmin_min,
                    yend=BO21_tempmax_bdmin_max), color = color2, alpha=1) +
   geom_point(aes(y=BO21_tempmax_bdmin_mean), color = color1, alpha=1, size=3) +
+  theme_classic(base_size = 12)+
   
   annotate(geom="text",
            x=2, y=32, 
