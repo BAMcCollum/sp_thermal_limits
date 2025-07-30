@@ -164,7 +164,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
   geom_segment(aes(xend=gen_spp,
                    y=BO21_tempmax_bdmin_min.x,
                    yend=BO21_tempmax_bdmin_max.x), color = color2, alpha=1) +
-  geom_point(aes(y=BO21_tempmax_bdmin_mean.x), color = color1, alpha=1, size=3) +
+  geom_point(aes(y=BO21_tempmax_bdmin_mean.x), alpha=1, size=3) +
   theme_classic(base_size = 16)+
   
   annotate(geom="text",
@@ -176,7 +176,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
            fontface="bold",
            size=5) +
   
-  geom_hline(yintercept = 15, col = "turquoise")+
+  geom_hline(yintercept = 15, col = "green")+
   
   labs(x=NULL, y= "Water Temperature in C")+
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
