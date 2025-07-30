@@ -9,11 +9,19 @@ library(taxize)
 library(flextable) 
 
 
-setwd(here::here())
-#setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/sp_thermal_limits")
+setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/")
 
-thermal_indicies <- read.csv("data/Occurrence_based_species_thermal_indicies_Photos_20250605.csv")
+thermal_indicies <- read.csv("sp_thermal_limits/data/Occurrence_based_species_thermal_indicies_Photos_20250605.csv")
 View(thermal_indicies)
+
+combined_data <- read_csv("rock_wall_change_thermal_preference/data/coefs_with_indices.csv")
+View(combined_data)
+
+thermal_indicies2 <- left_join(combined_data, thermal_indicies, by = "gen_spp")
+View(thermal_indicies2)
+
+thermal_indicies2 <- thermal_indicies2 |>
+filter(!is.na(gen_spp))
 
 # we should think more about which layers we are using, because there are loads
 # of options. read about them here:
@@ -80,7 +88,7 @@ r
 color2 <- "#f2a23f"
 
 maxtemp_meandepth_Pershing_plot <- thermal_indicies %>% 
-  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmean_mean) ) %>% # BO21... doesn't exist in thermal_indicies 
+  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmean_mean.x) ) %>% # BO21... doesn't exist in thermal_indicies 
   
   ggplot(aes(x=gen_spp)) +
   
@@ -146,18 +154,18 @@ maxtemp_mindepth_Pershing_plotq <- thermal_indicies %>%
 color1 <- "#782391"
 color2 <- "#f2a23f"
 
-maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies %>% 
-  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmin_mean) ) %>% # BO21... doesn't exist in thermal_indicies 
+maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>% 
+  mutate(gen_spp = forcats::fct_reorder(gen_spp, BO21_tempmax_bdmin_mean.x) ) %>% # BO21... doesn't exist in thermal_indicies 
   
   ggplot(aes(x=gen_spp)) +
   
-  geom_point(aes(y=BO21_tempmax_bdmin_min),  color = color2, alpha = 1)+
-  geom_point(aes(y=BO21_tempmax_bdmin_max), color = color2, alpha = 1) +
+  geom_point(aes(y=BO21_tempmax_bdmin_min.x),  color = color2, alpha = 1)+
+  geom_point(aes(y=BO21_tempmax_bdmin_max.x), color = color2, alpha = 1) +
   geom_segment(aes(xend=gen_spp,
-                   y=BO21_tempmax_bdmin_min,
-                   yend=BO21_tempmax_bdmin_max), color = color2, alpha=1) +
-  geom_point(aes(y=BO21_tempmax_bdmin_mean), color = color1, alpha=1, size=3) +
-  theme_classic(base_size = 12)+
+                   y=BO21_tempmax_bdmin_min.x,
+                   yend=BO21_tempmax_bdmin_max.x), color = color2, alpha=1) +
+  geom_point(aes(y=BO21_tempmax_bdmin_mean.x), color = color1, alpha=1, size=3) +
+  theme_classic(base_size = 16)+
   
   annotate(geom="text",
            x=2, y=32, 
@@ -174,6 +182,6 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies %>%
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
     axis.text.x = element_text(angle = -90, hjust = 0))
 
-ggsave("figures/maxtemp_mindepth_tipping_point_plotminmax.jpg")
+ggsave("sp_thermal_limits/figures/maxtemp_mindepth_tipping_point_plotminmax.jpg")
 
 
