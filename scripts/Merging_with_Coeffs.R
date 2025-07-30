@@ -176,7 +176,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
            fontface="bold",
            size=5) +
   
-  geom_hline(yintercept = 14.07, col = "turquoise")+
+  geom_hline(yintercept = 15, col = "turquoise")+
   
   labs(x=NULL, y= "Water Temperature in C")+
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
