@@ -23,6 +23,8 @@ View(thermal_indicies2)
 thermal_indicies2 <- thermal_indicies2 |>
 filter(!is.na(gen_spp))
 
+thermal_indicies2$gen_spp[thermal_indicies2$gen_spp=="Halichondria (Halichondria) panicea"] <- "Halichondria panicea"
+
 # we should think more about which layers we are using, because there are loads
 # of options. read about them here:
 layers <- tibble(list_layers(simplify = FALSE) %>% filter(str_detect(name, "Sea water temperature")) %>%
@@ -174,7 +176,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
              "\n Range of max temp at min depth",
            color = color2,
            fontface="bold",
-           size=5) +
+           size=7) +
   
   geom_hline(yintercept = 15, col = "green")+
   
