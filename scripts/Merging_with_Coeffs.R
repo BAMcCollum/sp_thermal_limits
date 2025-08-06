@@ -9,6 +9,7 @@ library(taxize)
 library(flextable) 
 
 
+#Get proper list of species for the figure
 setwd("~/Dropbox (Byrnes Lab)/Breck_GOM/Data/R_Projects/")
 
 thermal_indicies <- read.csv("sp_thermal_limits/data/Occurrence_based_species_thermal_indicies_Photos_20250605.csv")
@@ -167,7 +168,7 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
                    y=BO21_tempmax_bdmin_min.x,
                    yend=BO21_tempmax_bdmin_max.x), color = color2, alpha=1) +
   geom_point(aes(y=BO21_tempmax_bdmin_mean.x), alpha=1, size=3) +
-  theme_classic(base_size = 16)+
+  theme_classic(base_size = 18)+
   
   annotate(geom="text",
            x=2, y=32, 
@@ -178,8 +179,8 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
            fontface="bold",
            size=7) +
   
-  geom_hline(yintercept = 15, col = "green")+
-  
+  geom_hline(yintercept = 14.07, col = "turquoise", linewidth = 2)+
+  geom_hline(yintercept = 17.4, col = "green", linewidth = 2)+
   labs(x=NULL, y= "Water Temperature in C")+
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
     axis.text.x = element_text(angle = -90, hjust = 0))
