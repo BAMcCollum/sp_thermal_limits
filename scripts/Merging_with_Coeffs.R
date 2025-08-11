@@ -170,20 +170,20 @@ maxtemp_mindepth_tipping_point_plotminmax <- thermal_indicies2 %>%
   geom_point(aes(y=BO21_tempmax_bdmin_mean.x), alpha=1, size=3) +
   theme_classic(base_size = 18)+
   
-  annotate(geom="text",
-           x=2, y=32, 
-           hjust=0, vjust=0.2,
-           label = 
-             "\n Range of max temp at min depth",
-           color = color2,
-           fontface="bold",
-           size=7) +
+ #annotate(geom="text",
+#           x=2, y=32, 
+#           hjust=0, vjust=0,
+#           label = 
+#             "\n Range of max temp at min depth",
+#           color = color2,
+#           fontface="bold",
+#           size=7) +
   
   geom_hline(yintercept = 14.07, col = "turquoise", linewidth = 2)+
   geom_hline(yintercept = 17.4, col = "green", linewidth = 2)+
   labs(x=NULL, y= "Water Temperature in C")+
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
-    axis.text.x = element_text(angle = -90, hjust = 0))
+    axis.text.x = element_text(angle = -90, hjust = 0, face="italic"))
 
 ggsave("sp_thermal_limits/figures/maxtemp_mindepth_tipping_point_plotminmax.jpg")
 
