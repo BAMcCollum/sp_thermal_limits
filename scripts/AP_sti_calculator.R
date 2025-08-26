@@ -17,7 +17,7 @@ pacman::p_load(tidyverse, lubridate,
 
 # some packages are now deprecated - loading to make
 # script work
-pacman::p_load_gh("ropensci/bold")
+# pacman::p_load_gh("ropensci/bold")
 
 setwd(here::here())
 
@@ -81,7 +81,7 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
 
 
 ## ---- eval = FALSE---------------------------------------------------------------------------------------------------
-get_temp_summ_by_sp(sp_id = my_sp)
+##get_temp_summ_by_sp(sp_id = my_sp)
 
 
 ## --------------------------------------------------------------------------------------------------------------------
