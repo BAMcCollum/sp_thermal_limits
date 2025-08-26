@@ -7,18 +7,17 @@
 # library(raster) # v2.6-7
 # library(sdmpredictors) # v0.2.8
 # library(naniar) # v0.3.1
-# library(taxize)
+#library(taxize)
 #remotes::install_github("ropensci/bold")
 
 # using pacman to make sure things are loading right
 pacman::p_load(tidyverse, lubridate, 
                worrms, robis, raster, 
-               sdmpredictors, naniar)
+               sdmpredictors, naniar, taxize, bold)
 
 # some packages are now deprecated - loading to make
 # script work
-pacman::p_load_gh("ropensci/bold", 
-                  "ropensci/taxize")
+pacman::p_load_gh("ropensci/bold")
 
 setwd(here::here())
 
@@ -82,7 +81,7 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
 
 
 ## ---- eval = FALSE---------------------------------------------------------------------------------------------------
-## get_temp_summ_by_sp(sp_id = my_sp)
+get_temp_summ_by_sp(sp_id = my_sp)
 
 
 ## --------------------------------------------------------------------------------------------------------------------
@@ -293,7 +292,7 @@ names_clean <- recode(names_clean,
 # maybe need this # 
 names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
 # maybe need this # 
-names_clean <- names_clean[!names_clean == "Phymatolithon rugulosum"]
+names_clean <- names_clean[!names_clean == "Phymatolithon scabriusculum"]
 
 #names_clean <- names_clean[!names_clean =="Micrura affinis"]
 #names_clean <- names_clean[!names_clean == "Protectocarpus speciosus"]
@@ -334,7 +333,7 @@ for(i in names_clean){
  
   # add a clock to print species name as we start
   print(i)
-  
+
   #my_sp <- wm_name2id(i)
   my_sp <- get_id(i)
   db <- get_temp_summ_by_sp(my_sp)
