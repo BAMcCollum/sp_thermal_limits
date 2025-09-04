@@ -222,7 +222,7 @@ t_summary <- function(t_matched_dat, layercodes){
 # Alexis's Edits with Jake's Additiona
 #webbdata= read_csv(url("https://raw.githubusercontent.com/tomjwebb/occurrence-derived-thermal-affinity/master/data/t_matched_globtherm_dat_full.csv"))
 #data <- read.csv("./McCollum_Sebens_sp_list.csv")
-View(data)
+#View(data)
 
 data <- read.csv("data/Sebens_found_sp_list.csv")
 
@@ -245,7 +245,7 @@ names_clean <- taxize::gna_verifier(names)%>%
 #   filter(user_supplied_name == matched_name) %>%
 #   distinct(matched_name) %>% pull(matched_name)
 
-# view the entries we cut
+# view the entries we cut - should be null
 names[!names %in% names_clean]
 
 # make some manual changes bc these names don't work as is
@@ -289,9 +289,8 @@ names_clean <- recode(names_clean,
 
 # manually remove some that didn't work - not sure why,
 # errors said these entries didn't have depth values
-# maybe need this # 
+
 names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
-# maybe need this # 
 names_clean <- names_clean[!names_clean == "Phymatolithon scabriusculum"]
 
 #names_clean <- names_clean[!names_clean =="Micrura affinis"]
@@ -351,7 +350,7 @@ coefout <- coefout %>% relocate(gen_spp)
 write.csv(coefout, 
           file = here::here(#"outputs","datasets",
                       "data",
-                      "Occurrence_based_species_thermal_indicies_Photos_20250605.csv"),
+                      "Occurrence_based_species_thermal_indicies_Photos_20250904.csv"),
           row.names = F)
 
 # read in and go from here
