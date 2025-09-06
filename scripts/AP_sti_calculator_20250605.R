@@ -1,26 +1,24 @@
-#' ----------------------------------------------------
-#' Species Thermal Indices (based on code 
-#' from Tom Webb and adaptations by Amelia Hesketh and
-#' Jake Lawlor)
-#' 
-#' Code pulls in species sampled by Sebens et al.
-#' and calculates their distribution based thermal
-#' preferences using layers from OBIS selected for
-#' relevance
-#' 
-#' Current code adapted by Jarrett Byrnes <jarrett.byrnes@umb.edu>
-#' ----------------------------------------------------
+## Species Thermal Indices (courtesy of Dr. Tom Webb)##
+#ON SEPT 16TH 2022 I changed the temp metric from mean at mean depth to max at mean depth at line 37+
+# library(tidyverse) # v1.2.1
+# library(lubridate) # v1.7.4
+# library(worrms) # v0.2.8
+# library(robis) # v1.0.1
+# library(raster) # v2.6-7
+# library(sdmpredictors) # v0.2.8
+# library(naniar) # v0.3.1
+#library(taxize)
+#remotes::install_github("ropensci/bold")
 
-# Load packages with pacman to make sure they load properly
+# using pacman to make sure things are loading right
 pacman::p_load(tidyverse, lubridate, 
                worrms, robis, raster, 
-               sdmpredictors, naniar, taxize)
+               sdmpredictors, naniar, taxize, bold)
 
-# some packages are now deprecated - but available from 
-# github
-pacman::p_load_gh("ropensci/bold")
+# some packages are now deprecated - loading to make
+# script work
+# pacman::p_load_gh("ropensci/bold")
 
-# set wd to right place
 setwd(here::here())
 
 source("scripts/sdmpredictors_fixed.R") #
@@ -39,14 +37,30 @@ list_layers() %>% filter(str_detect(layer_code,"BO2_tempmean_bdmean")) %>% dplyr
 
 
 ## --------------------------------------------------------------------------------------------------------------------
-## Functions for working with Biooracle layers
+use_defaults <- TRUE
 
 
+## --------------------------------------------------------------------------------------------------------------------
+#Modiolus modiolus, Metridium senile, Anurida maritima, Fucus distichus, Mastocarpus stellatus, Ceramium virgatum, Hildenbrandia rubra, Strongylocentrotus droebachiensis, Prasiola stipitata, Hiatella arctica, Cryptosula pallasiana, Rhizoclonium tortuosum, Leathesia marina, Phymatolithon lenormandii, Asterias rubens, Elachista fucicola, Lacuna vincta, Anomia simplex, Clathromorphum circumscriptum, Saccharina latissima, Crepidula fornicata, Asterias forbesi, Cancer borealis, Diadumene lineata, Pagurus acadianus, Semibalanus balanoides, Mytilus edulis, Nucella lapillus, Littorina obtusata, Littorina saxatilis, Ascophyllum nodosum, Chondrus crispus, Littorina littorea, Corallina officinalis, Fucus spiralis, Fucus vesiculosus, Tectura testudinalis, Alaria esculenta, Ulva lactuca, Codium fragile, Ulva intestinalis, Chordaria flagelliformis, Ahnfeltia plicata, Plumaria plumosa
+qw <- function(string, sep = "\\s+") {
+
+  strsplit(string, split = sep)[[1]]
+
+}
+
+my_sp_string <- qw("Dendronoa carnea, Modiolus modiolus, Metridium senile, Anurida maritima, Fucus distichus, Mastocarpus stellatus, Ceramium virgatum, Hildenbrandia rubra, Strongylocentrotus droebachiensis, Prasiola stipitata, Hiatella arctica, Cryptosula pallasiana, Rhizoclonium tortuosum, Leathesia marina, Phymatolithon lenormandii, Asterias rubens, Elachista fucicola, Lacuna vincta, Anomia simplex, Clathromorphum circumscriptum, Saccharina latissima, Crepidula fornicata, Asterias forbesi, Cancer borealis, Diadumene lineata, Pagurus acadianus, Semibalanus balanoides, Mytilus edulis, Nucella lapillus, Littorina obtusata, Littorina saxatilis, Ascophyllum nodosum, Chondrus crispus, Littorina littorea, Corallina officinalis, Fucus spiralis, Fucus vesiculosus, Tectura testudinalis, Alaria esculenta, Ulva lactuca, Codium fragile, Ulva intestinalis, Chordaria flagelliformis, Ahnfeltia plicata, Plumaria plumosa",
+                   sep = ", ")
+
+my_sp <- wm_name2id("Modiolus modiolus")
+my_sp
+
+
+## --------------------------------------------------------------------------------------------------------------------
 get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdmean", 
                                                  "BO21_tempmax_ss", "BO21_tempmean_bdmean",
                                                  "BO21_tempmean_bdmin",
                                                  "BO21_tempmax_bdmin", "BO21_templtmax_bdmin"),
-                                save_all_recs = TRUE, use_defaults = TRUE){
+                                save_all_recs = TRUE, use_defaults = use_defaults){
   
   # function to get OBIS records for a given species and match to Bio-Oracle data
   # if save_all_recs == TRUE, this full matched dataset will be saved before summarising
@@ -71,7 +85,6 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
 
 
 ## --------------------------------------------------------------------------------------------------------------------
-## Functions for getting information from OBIS
 get_obis_recs <- function(species_id, missing_check = FALSE,
                           fields = c("decimalLongitude", "decimalLatitude", "depth", "date_year", #"month",
                                      "scientificName", "aphiaID")
@@ -206,6 +219,10 @@ t_summary <- function(t_matched_dat, layercodes){
 
 
 # apply to our data -------------------------------------------------------
+# Alexis's Edits with Jake's Additiona
+#webbdata= read_csv(url("https://raw.githubusercontent.com/tomjwebb/occurrence-derived-thermal-affinity/master/data/t_matched_globtherm_dat_full.csv"))
+#data <- read.csv("./McCollum_Sebens_sp_list.csv")
+#View(data)
 
 data <- read.csv("data/Sebens_found_sp_list.csv")
 
@@ -217,41 +234,76 @@ data <- data %>%
 # isolate names variable
 names <- data %>% pull(Accepted.Name)
 
-# use taxize package to get cleaned verifies name
-# gna_verifier pulling from WORMS, inat, EOL, Catalogue of Life
-names_clean <- taxize::gna_verifier(names,
-                                    data_sources = c(1,9,12,180))%>% 
+# use taxize package
+# gna_verifier
+names_clean <- taxize::gna_verifier(names)%>% 
   filter(submittedName == matchedCanonicalSimple) %>%
   distinct(matchedCanonicalSimple) %>% pull(matchedCanonicalSimple)
+ 
+# old code using gnr_resolve which is now deprecated
+# names_clean <- taxize::gnr_resolve(names) %>% 
+#   filter(user_supplied_name == matched_name) %>%
+#   distinct(matched_name) %>% pull(matched_name)
 
 # view the entries we cut - should be null
 names[!names %in% names_clean]
 
 # make some manual changes bc these names don't work as is
 # (usually it's because the name is not accepted anymore in worms)
-# 
-# names_clean <- recode(names_clean,
-#                       "Tubularia crocea" = "Ectopleura crocea",
-#                       "Spirorbis borealis" = "Spirorbis (Spirorbis) spirorbis",
-#                       "Haliclona oculata" = "Haliclona (Haliclona) oculata",
-#                       "Halichondria panicea" = "Halichondria (Halichondria) panicea",
-#                       "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
-#                       "Clathria prolifera" = "Clathria (Clathria) prolifera") %>% unique()
+#names_clean <- recode(names_clean, 
+       # "Carcinus maenus" =  "Carcinus maenas",
+       # "Giffordia granulosa" = "Hincksia granulosa",
+       # "Hippothoa hyalina" = "Celleporella hyalina",
+       # "Idotea baltica" = "Idotea balthica",
+       # "Nemalion helminthoides" = "Nemalion elminthoides",
+       # "Tectura testudinalis" = "Testudinalia testudinalis",
+       # "Tonicella rubra" = "Boreochiton ruber",
+       # "Botryllus schlosseri" = "Botryllus schlosseri",
+       # "Bugula turrita" = "Crisularia turrita",
+       # "Cuthona gymnota" = "Catriona gymnota",
+       # "Gellius arcoferus" = "Hemigellius arcofer",
+       # "Halichondria panicea" = "Halichondria (Halichondria) panicea",
+       # "Haliclona oculata" = "Haliclona (Haliclona) oculata",
+       # "Microciona prolifera" = "Clathria (Clathria) prolifera",
+       # "Myxilla fimbriata" = "Myxilla (Myxilla) fimbriata",
+       # "Notoacmea testudinalis" = "Testudinalia testudinalis",
+       # "Pholis gunnelus" = "Pholis gunnellus",
+       # "Porania pulvillus" = "Porania (Porania) pulvillus",
+       # "Sagartia elegans" = "Cylista elegans",
+       # "Scrupocellaria scabra" = "Aquiloniella scabra",
+       # "Tritonia plebeia" = "Duvaucelia plebeia",
+       #  "Halisarca nahtantensis" = "Halisarca nahantensis",
+       # "Bugula turrita" = "Crisularia turrita",
+       # "Clathria prolifera" = "Clathria (Clathria) prolifera",
+       # "Flabellina verrucosa" = "Coryphella verrucosa",
+       # "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
+       # "Leptasterias polaris" = "Leptasterias (Hexasterias) polaris") %>% unique()
+
+names_clean <- recode(names_clean,
+                      "Tubularia crocea" = "Ectopleura crocea",
+                      "Spirorbis borealis" = "Spirorbis (Spirorbis) spirorbis",
+                      "Haliclona oculata" = "Haliclona (Haliclona) oculata",
+                      "Halichondria panicea" = "Halichondria (Halichondria) panicea",
+                      "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
+                      "Clathria prolifera" = "Clathria (Clathria) prolifera") %>% unique()
 
 # manually remove some that didn't work - not sure why,
 # errors said these entries didn't have depth values
 
-# Not in OBIS?
 names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
-
-# Not in WORMS - trying to fix
 names_clean <- names_clean[!names_clean == "Phymatolithon scabriusculum"]
 
-# WORMS is not up to date on some taxonomy, so adding some additional species
-# Boreolithothamnion glaciale = Lithothamnion glaciale
-# Phymatolithon scabriusculum = Phymatolithon rugulosum
-names_clean <- c(names_clean, "Lithothamnion glaciale",
-                 "Phymatolithon rugulosum")
+#names_clean <- names_clean[!names_clean =="Micrura affinis"]
+#names_clean <- names_clean[!names_clean == "Protectocarpus speciosus"]
+#names_clean <- names_clean[!names_clean == "Balanus spp."]
+#names_clean <- names_clean[!names_clean == "Libinia spp."]
+#names_clean <- names_clean[!names_clean == "Obelia spp."]
+#names_clean <- names_clean[!names_clean == "Pagurus spp."]
+#names_clean <- names_clean[!names_clean == "Aplysilla longispina"]
+#names_clean <- names_clean[!names_clean == "Fagesia lineata"]
+
+
+
 
 # get occurrence data -----------------------------------------------------
 
@@ -306,7 +358,6 @@ write.csv(coefout,
 coefout <- read.csv("data/Occurrence_based_species_thermal_indicies_Photos_20250605.csv")
 
 # plot data ---------------------------------------------------------------
-# maybe put in a separate script?
 
 #color1 <- "#782391"
 color2 <- "#782391"
@@ -315,6 +366,17 @@ color2 <- "#782391"
   
   ggplot(aes(x=gen_spp)) +
   
+#  geom_point(aes(y=BO_sstmean_mean),  color = color1, alpha=1, size=1.5 ) +
+#  geom_segment(aes(xend=gen_spp,
+#                   y=BO_sstmean_q5,
+#                   yend=BO_sstmean_q95),  color = color1, alpha=.5) +
+#  annotate(geom="text",
+#           x=3, y=30, 
+#           hjust=0, vjust=1,
+#           label = "Mean SST",
+#           color = color1,
+#           fontface="bold",
+#           size=5) +
   
   geom_point(aes(y=BO21_tempmax_bdmean_q5),  color = color2, alpha=.5,
              position = position_nudge(x = 0.25))+
@@ -341,5 +403,5 @@ color2 <- "#782391"
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
         axis.text.x = element_text(angle = -90, hjust = 0))
 
-ggsave("figures/thermal_preference_ranges.jpg")
+ ggsave("figures/thermal_preference_ranges.jpg")
 
