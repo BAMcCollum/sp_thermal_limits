@@ -9,6 +9,7 @@
 #' relevance
 #' 
 #' Current code adapted by Jarrett Byrnes <jarrett.byrnes@umb.edu>
+#' for use with Ken Sebens subtidal rock wall data
 #' ----------------------------------------------------
 
 # Load packages with pacman to make sure they load properly
@@ -25,19 +26,6 @@ setwd(here::here())
 
 source("scripts/sdmpredictors_fixed.R") #
 
-# JL notes: -------------------------------------------------------
-# we should think more about which layers we are using, because there are loads
-# of options. read about them here:
-
-list_layers() %>% filter(str_detect(name, "Sea surface|Sea water temperature|Sea bottom")) %>%
- dplyr::select(layer_code,name) %>% arrange(layer_code)
-
-list_layers() %>% filter(str_detect(layer_code,"BO2_tempmean_bdmean")) %>% dplyr::select(name)
-
-## ---- eval = FALSE---------------------------------------------------------------------------------------------------
-## bespoke_path <- "/my bespoke file path name"
-
-
 ## --------------------------------------------------------------------------------------------------------------------
 ## Functions for working with Biooracle layers
 
@@ -53,11 +41,11 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
   # function returns a summary of temperature affinity of the species
   
   # run the full set of functions #109620
-  sp_temp <- get_obis_recs(species_id = sp_id) %>%
+  sp_temp <- get_obis_recs(species_id = sp_id) %>% # the [1] is for cases we have to force multiple IDs
     get_bio_oracle_t(layercodes = bo_lc) %>%
     save_full_recs(save_recs = save_all_recs) %>%
     t_summary(layercodes = bo_lc) %>%
-    mutate(species_id = sp_id) %>%
+    mutate(species_id = sp_id[1]) %>% # the [1] is for cases we have to force multiple IDs
     dplyr::select(species_id, everything())
   
   # return the temperature summary for the species
@@ -76,9 +64,13 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
                           fields = c("decimalLongitude", "decimalLatitude", "depth", "date_year", #"month",
                                      "scientificName", "aphiaID")
 ){
-  # Fuction to get OBIS records for a given species_id, which must be a recognised WoRMS Aphia ID
+  # Fuction to get OBIS records for a given species_id, which must be a
+  # recognised WoRMS Aphia ID
   
-  # NB OBIS returns records from all taxa gathered under the same valid Aphia ID; the aphia ID returned is that of the taxon as recorded, not necessarily the valid ID, so in order that the final dataset is correctly named we add back in the 'correct' ID here as valid_AphiaID
+  # NB OBIS returns records from all taxa gathered under the same valid Aphia
+  # ID; the aphia ID returned is that of the taxon as recorded, not necessarily
+  # the valid ID, so in order that the final dataset is correctly named we add
+  # back in the 'correct' ID here as valid_AphiaID
   
   if(missing_check == TRUE){
     # catch invalid / unrecognised AphiaIDs here - but recommend doing this prior to calling these functions
@@ -94,9 +86,11 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
                  is.na(depth) ~ 0,
                  depth < 0 ~ 0,
                  TRUE ~ depth),
-               valid_AphiaID = species_id)
+               valid_AphiaID = species_id[1]) # the [1] is for when we are looking at multiple species due to taxonomy not catching up yet
     } else {
-      # at present just returns an empty tibble, which causes problems with other functions further down the pipeline, hence recommend checking AphiaIDs prior to calling
+      # at present just returns an empty tibble, which causes problems with
+      # other functions further down the pipeline, hence recommend checking
+      # AphiaIDs prior to calling
       obis_recs <- tibble()
     }
   } else {
@@ -110,7 +104,7 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
                is.na(depth) ~ 0,
                depth < 0 ~ 0,
                TRUE ~ depth),
-             valid_AphiaID = species_id)
+             valid_AphiaID = species_id[1]) # the [1] is for when we are looking at multiple species due to taxonomy not catching up yet
   }
   # return the OBIS records
   obis_recs
@@ -120,8 +114,9 @@ get_obis_recs <- function(species_id, missing_check = FALSE,
 
 ## --------------------------------------------------------------------------------------------------------------------
 get_bio_oracle_t <- function(obis_recs, layercodes, use_defaults = TRUE){
-  # Function to match a set of OBIS occurrence recrods to the specified layers from Bio-ORACLE
-  # Set path for where these two temperature datasets will be stored
+  # Function to match a set of OBIS occurrence recorods to the specified layers
+  # from Bio-ORACLE Set path for where these two temperature datasets will be
+  # stored
   bo_path <- ifelse(use_defaults,
                     paste0(file.path(getwd()), "/biooracle"),
                     paste0(bespoke_path, "/biooracle"))
@@ -152,7 +147,8 @@ get_bio_oracle_t <- function(obis_recs, layercodes, use_defaults = TRUE){
 
 ## --------------------------------------------------------------------------------------------------------------------
 save_full_recs <- function(rec_df, save_recs = TRUE, use_defaults = TRUE, bespoke_path = NULL){
-  # if save_recs == TRUE, save the full set of obis records + BO layer values for a species
+  # if save_recs == TRUE, save the full set of obis records + BO layer values
+  # for a species
   
   if(save_recs == TRUE){
     out_path <- ifelse(use_defaults, paste0(file.path(getwd()),
@@ -201,12 +197,9 @@ t_summary <- function(t_matched_dat, layercodes){
 }
 
 
-
-
-
-
-# apply to our data -------------------------------------------------------
-
+########
+# apply functios to our data -------------------------------------------------------
+########
 data <- read.csv("data/Sebens_found_sp_list.csv")
 
 # pull only entries with spaces to ensure Genus species
@@ -227,31 +220,29 @@ names_clean <- taxize::gna_verifier(names,
 # view the entries we cut - should be null
 names[!names %in% names_clean]
 
-# make some manual changes bc these names don't work as is
-# (usually it's because the name is not accepted anymore in worms)
-# 
-# names_clean <- recode(names_clean,
-#                       "Tubularia crocea" = "Ectopleura crocea",
-#                       "Spirorbis borealis" = "Spirorbis (Spirorbis) spirorbis",
-#                       "Haliclona oculata" = "Haliclona (Haliclona) oculata",
-#                       "Halichondria panicea" = "Halichondria (Halichondria) panicea",
-#                       "Hymedesmia paupertas" = "Hymedesmia (Hymedesmia) paupertas",
-#                       "Clathria prolifera" = "Clathria (Clathria) prolifera") %>% unique()
+# Because "Phymatolithon scabriusculum"  is not
+# valid, after consultation, we are using the
+# older name which has not been updated in
+# many later databases and they are synonymous
+names_clean <- c(names_clean, "Phymatolithon rugulosum")
 
-# manually remove some that didn't work - not sure why,
-# errors said these entries didn't have depth values
 
-# Not in OBIS?
+# Not in OBIS - but very rare, so no data and
+# will cause script to fail - not used in analysis
+# so removing
 names_clean <- names_clean[!names_clean == "Halisarca nahantensis"]
 
-# Not in WORMS - trying to fix
-names_clean <- names_clean[!names_clean == "Phymatolithon scabriusculum"]
+# Waernia mirabilis has entries from only one site
+# so is not reliable for this analysis. Exclude.
+names_clean <- names_clean[!names_clean == "Waernia mirabilis"]
 
-# WORMS is not up to date on some taxonomy, so adding some additional species
-# Boreolithothamnion glaciale = Lithothamnion glaciale
-# Phymatolithon scabriusculum = Phymatolithon rugulosum
-names_clean <- c(names_clean, "Lithothamnion glaciale",
-                 "Phymatolithon rugulosum")
+# "Alcyonium siderium" is likely incorrectly listed
+# as Alcyonium digitatum - A.s. only has one record in Europe
+# while digitatum is all over the Atlantic. Likely a taxonomy
+# issue, so, using digitatum is appropriate
+names_clean <- gsub("Alcyonium siderium", "Alcyonium digitatum", names_clean)
+
+
 
 # get occurrence data -----------------------------------------------------
 
@@ -283,6 +274,13 @@ for(i in names_clean){
 
   #my_sp <- wm_name2id(i)
   my_sp <- get_id(i)
+
+  # if boreolithothamnion, also get lithothamnion glaciale
+  # as it is not yet updated in OBIS
+  if(i == "Boreolithothamnion glaciale") {
+    # c(boreo, litho)
+    my_sp <- c(1736213, 145170)
+  }
   db <- get_temp_summ_by_sp(my_sp)
   db$gen_spp <- i
   coefout <- rbind(coefout, db)
