@@ -258,9 +258,19 @@ get_id <- function(.x){
   # if(class(rec) == "try-error"){return(NA)} #original
    if("try-error" %in% class(rec)){return(NA)}
   
-  #... then use another option to find alphiaID
-  acc <- subset(rec, rec$status=="accepted")
-  acc$AphiaID[1]
+  # return the valid ID
+  return(rec$valid_AphiaID[1])
+  # 
+  # #... then use another option to find alphiaID
+  # acc <- subset(rec, rec$status=="accepted")
+  # 
+  # # if we don't get back anything accepted, use the 
+  # # accepted field
+  # if(nrow(acc) == 0){
+  #   return(rec$valid_AphiaID[1])
+  # }
+  # 
+  # acc$AphiaID[1]
 }
 
 # create blank dataframe
@@ -281,6 +291,7 @@ for(i in names_clean){
     # c(boreo, litho)
     my_sp <- c(1736213, 145170)
   }
+  
   db <- get_temp_summ_by_sp(my_sp)
   db$gen_spp <- i
   coefout <- rbind(coefout, db)
