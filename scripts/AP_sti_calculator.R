@@ -292,6 +292,14 @@ for(i in names_clean){
     my_sp <- c(1736213, 145170)
   }
   
+  # if Phymatolithon, get Phymatolithon rugulosum
+  # and Phymatolithon scabriusculum as it is not 
+  # updated in OBIS yes
+  if(i %in% c("Phymatolithon rugulosum", "Phymatolithon scabriusculum")) {
+    # c(boreo, litho)
+    my_sp <- c(157333, 1832160)
+  }
+  
   db <- get_temp_summ_by_sp(my_sp)
   db$gen_spp <- i
   coefout <- rbind(coefout, db)
@@ -307,7 +315,7 @@ coefout <- coefout %>% relocate(gen_spp)
 write.csv(coefout, 
           file = here::here(#"outputs","datasets",
                       "data",
-                      "Occurrence_based_species_thermal_indicies_Photos_20250904.csv"),
+                      "Occurrence_based_species_thermal_indicies_Photos_20250917_better_valid_id.csv"),
           row.names = F)
 
 # read in and go from here
