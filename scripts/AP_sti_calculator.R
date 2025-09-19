@@ -42,6 +42,8 @@ get_temp_summ_by_sp <- function(sp_id, bo_lc = c("BO_sstmean", "BO21_tempmax_bdm
   
   # run the full set of functions #109620
   sp_temp <- get_obis_recs(species_id = sp_id) %>% # the [1] is for cases we have to force multiple IDs
+    mutate(year = suppressWarnings(as.numeric(year))) |> # some weird stuff with NA years
+    add_sites_this_study() |> # puts halfway rock in
     get_bio_oracle_t(layercodes = bo_lc) %>%
     save_full_recs(save_recs = save_all_recs) %>%
     t_summary(layercodes = bo_lc) %>%
@@ -193,12 +195,81 @@ t_summary <- function(t_matched_dat, layercodes){
   # Tidy up and return the species-level summary
   t_summ <- bind_cols(counts, missings_df, t_stats)
   
-  t_summ
+  t_summ |> 
+    mutate(scientificName = t_matched_dat$scientificName[1],
+           hasSebensData = t_matched_dat$hasSebensData[1])
+}
+
+## --------------------------------------------------------------------------------------------------------------------
+## Add data from species from Sebens surveys
+sp_over_time <- read_csv("data/sp_presence_over_time.csv")
+
+add_sites_this_study <- function(dat){
+  # is this something we are adding information to?
+  if(!(dat$scientificName[1] %in% unique(sp_over_time$scientificName))){
+    dat |>
+      mutate(hasSebensData = FALSE)
+  }
+  
+  # where was this species found
+  sp_found_at <- sp_over_time |>
+    filter(scientificName == dat$scientificName[1])
+  
+  sites <- bind_rows(
+    
+    # note - biooracle grid cells to large to do inner/outer
+    # so binding into one site for ease of use
+    
+    # shag rocks 42.414692, -70.906408
+    # inner is 7,8m
+    # outer is 8,9,10m
+    tibble(
+      area = c("Shag Rocks Inner", "Shag Rocks Outer"),
+      decimalLongitude = -70.906408,
+      decimalLatitude = 42.414692,
+    ),
+    # halfway rock 42.50227063025665, -70.77500303312874
+    # inner is 7,8,15,16m
+    # outer is 9,10,12,15m
+    tibble(
+      area = c("Halfway Rock Inner", "Halfway Rock Outer"),
+      decimalLongitude = -70.77500303312874,
+      decimalLatitude = 42.50227063025665,
+    ),
+    # dive beach 42.420571, -70.904461, 7m
+    tibble(
+      area = "Dive Beach", 
+      decimalLongitude = -70.904461,
+      decimalLatitude = 42.420571,
+    )
+  )
+  
+  # bind occurances to site info
+  sp_dat <- left_join(sp_found_at, sites) |>
+    dplyr::select(decimalLongitude,
+                  decimalLatitude,
+                  depth_m) |>
+    rename(depth = depth_m)
+  
+  # put it together in robis format
+  newdat <- tibble(
+    sp_dat,
+    date_year = NA,
+    scientificName = dat$scientificName[1],
+    aphiaID = dat$aphiaID[1],
+    year = 0,
+    depth0 = NA,
+    valid_AphiaID = dat$valid_AphiaID[1]
+  ) |>
+    mutate(depth0 = depth)
+  
+  bind_rows(dat, newdat) |>
+    mutate(hasSebensData = TRUE)
 }
 
 
 ########
-# apply functios to our data -------------------------------------------------------
+# apply functions to our data -------------------------------------------------------
 ########
 data <- read.csv("data/Sebens_found_sp_list.csv")
 
