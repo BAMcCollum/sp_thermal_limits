@@ -189,7 +189,11 @@ t_summary <- function(t_matched_dat, layercodes){
 
 ## --------------------------------------------------------------------------------------------------------------------
 ## Add data from species from Sebens surveys
-sp_over_time <- read_csv("data/sp_presence_over_time.csv")
+# for Thermal preference change across all sites
+#sp_over_time <- read_csv("data/sp_presence_over_time.csv")
+
+# for shallow-deep analysis
+sp_over_time <- read_csv("data/sp_presence_over_time100825.csv")
 
 add_sites_this_study <- function(dat){
   # is this something we are adding information to?

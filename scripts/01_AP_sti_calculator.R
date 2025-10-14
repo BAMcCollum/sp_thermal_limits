@@ -31,7 +31,12 @@ source("scripts/biooracle_obis_functions.r")
 ########
 # apply functions to our data -------------------------------------------------------
 ########
-data <- read.csv("data/Sebens_found_sp_list.csv")
+
+# for thermal preference change analysis
+#data <- read.csv("data/Sebens_found_sp_list.csv")
+
+# for shallow-deep analysis
+data <- read.csv("data/Sebens_found_sp_list100825.csv")
 
 # pull only entries with spaces to ensure Genus species
 data <- data %>%
@@ -143,8 +148,17 @@ for(i in names_clean){
 #Botryllus schlosseri# save csv ----------------------------------------------------------------
 # move name column to beginning
 coefout <- coefout %>% relocate(gen_spp)
-write.csv(coefout, 
+
+# for shallow-deep analysis
+write.csv(coefout,
           file = here::here(#"outputs","datasets",
                       "data",
-                      "Occurrence_based_species_thermal_indicies_Photos_20250919.csv"),
+                      "Occurrence_based_species_thermal_indicies_Photos_100825.csv"),
           row.names = F)
+
+# for thermal change analysis
+# write.csv(coefout, 
+#           file = here::here(#"outputs","datasets",
+#                       "data",
+#                       "Occurrence_based_species_thermal_indicies_Photos_20250919.csv"),
+#           row.names = F)
